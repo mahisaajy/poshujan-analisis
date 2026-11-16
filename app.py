@@ -257,7 +257,7 @@ def main():
         )
 
     tab_ring, tab_only1, tab_only2, tab_diff, tab_side, tab_raw = st.tabs(
-        ["Ringkasan", "Hanya di V1", "Hanya di V2", "Selisih Data", "Kiri–Kanan", "Data Mentah"])
+        ["Ringkasan", "Hanya di V1", "Hanya di V2", "Selisih Data", "Perbandingan Detail", "Data Mentah"])
 
     with tab_ring:
         n_pos = diff["ID"].nunique() if not diff.empty else 0
@@ -376,7 +376,7 @@ def main():
             else:
                 st.caption(f"{total_terfilter:,} baris terfilter.".replace(",", "."))
             st.download_button("Unduh tampilan ini (CSV)", to_csv_bytes(disp.reset_index()),
-                               "v1_v2_bersebelahan.csv", "text/csv", key="dl_side")
+                               "perbandingan_detail.csv", "text/csv", key="dl_side")
 
     with tab_raw:
         versi = st.radio("Tampilkan file", ["V1", "V2"], horizontal=True)
