@@ -131,6 +131,10 @@ def compute_diff(df1, df2):
             na = pd.to_numeric(va, errors="coerce").to_numpy(dtype=float)
             nb = pd.to_numeric(vb, errors="coerce").to_numpy(dtype=float)
             bad = ~np.isclose(na, nb, rtol=0.0, atol=1e-9, equal_nan=True)
+        elif col == "Provinsi":
+            bad = ~np.isclose(pd.to_numeric(a["Provinsi ID"], errors="coerce").to_numpy(dtype=float),
+                              pd.to_numeric(b["Provinsi ID"], errors="coerce").to_numpy(dtype=float),
+                              rtol=0.0, atol=1e-9, equal_nan=True)
         elif col == "Aktif":
             bad = ~(va.to_numpy(dtype=object) == vb.to_numpy(dtype=object))
         else:
@@ -164,6 +168,10 @@ def build_side(df1, df2):
             na = pd.to_numeric(va, errors="coerce").to_numpy(dtype=float)
             nb = pd.to_numeric(vb, errors="coerce").to_numpy(dtype=float)
             mask[col] = ~np.isclose(na, nb, rtol=0.0, atol=1e-9, equal_nan=True)
+        elif col == "Provinsi":
+            mask[col] = ~np.isclose(pd.to_numeric(a["Provinsi ID"], errors="coerce").to_numpy(dtype=float),
+                                    pd.to_numeric(b["Provinsi ID"], errors="coerce").to_numpy(dtype=float),
+                                    rtol=0.0, atol=1e-9, equal_nan=True)
         elif col == "Aktif":
             mask[col] = ~(va.to_numpy(dtype=object) == vb.to_numpy(dtype=object))
         else:
@@ -260,6 +268,8 @@ def main():
             "- IS_ACTIVE: `Y`/`N` (V1) vs `true`/`false` (V2)\n"
             "- Region: angka (V1) vs `Region I...V` (V2)\n"
             "- Tanggal: datetime (V1) vs teks (V2)\n"
+            "- Nama provinsi lama vs baru (mis. `Nanggroe Aceh Darussalam` vs `Aceh`) "
+            "dianggap sama selama Provinsi ID sama\n"
             "- Spasi dan kapitalisasi teks"
         )
 
