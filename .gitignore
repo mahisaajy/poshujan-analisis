@@ -1,0 +1,13 @@
+# Virtual environment
+.venv/
+
+# Cache Python
+__pycache__/
+*.pyc
+
+# Data lokal Command Code
+# .commandcode/
+
+# OS
+.DS_Store
+Thumbs.db
