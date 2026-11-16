@@ -200,22 +200,6 @@ def side_styler(disp, msel):
     return disp.style.apply(warna, axis=0)
 
 
-@st.cache_data
-def build_combined(df1, df2):
-    a, b, mask = build_side(df1, df2)
-    cols = ["Jumlah Selisih"] + COMPARE_COLS
-    frames, flags = [], []
-    for c in cols:
-        frames.append(a[c].rename(f"{c} (V1)"))
-        frames.append(b[c].rename(f"{c} (V2)"))
-        flags.extend([mask[c], mask[c]])
-    combined = pd.concat(frames, axis=1)
-    mcomb = pd.concat(flags, axis=1)
-    mcomb.index = combined.index
-    mcomb.columns = combined.columns
-    return combined, mcomb
-
-
 def to_csv_bytes(df):
     return df.to_csv(index=False, sep=";").encode("utf-8-sig")
 
@@ -255,7 +239,6 @@ def main():
     df1, df2 = load_data()
     only1, only2, diff, common_ids = compute_diff(df1, df2)
     a_side, b_side, mask_side = build_side(df1, df2)
-    combined, mask_comb = build_combined(df1, df2)
 
     with st.sidebar:
         st.header("Sumber data")
@@ -351,10 +334,17 @@ def main():
         prov = c2.selectbox("Provinsi (menurut V1)", ["(semua)"] + sorted(a_side["Provinsi"].unique()),
                             key="side_prov")
         q = c3.text_input("Cari (ID atau nama)", "", key="side_cari").strip().lower()
+        pilih = st.pills("Kolom yang dicek perbedaannya", COMPARE_COLS,
+                         selection_mode="multi", default=COMPARE_COLS, key="side_pills",
+                         help="Kolom yang tidak dipilih tetap tampil, tetapi tidak diwarnai merah "
+                              "dan tidak dihitung sebagai selisih.")
+        aktif = set(pilih)
 
+        jumlah_cek = (mask_side[list(aktif)].sum(axis=1).astype(int)
+                      if aktif else pd.Series(0, index=mask_side.index))
         sel = a_side
         if hanya_beda:
-            sel = sel[sel["Jumlah Selisih"] > 0]
+            sel = sel[jumlah_cek.loc[sel.index] > 0]
         if prov != "(semua)":
             sel = sel[sel["Provinsi"] == prov]
         if q:
@@ -370,8 +360,15 @@ def main():
         if idx.empty:
             st.info("Tidak ada baris yang sesuai filter.")
         else:
-            disp = combined.loc[idx]
-            msel = mask_comb.loc[idx]
+            disp = pd.DataFrame(index=idx)
+            disp["Jumlah Selisih"] = jumlah_cek.loc[idx]
+            msel = pd.DataFrame(False, index=idx, columns=["Jumlah Selisih"])
+            for c in COMPARE_COLS:
+                disp[f"{c} (V1)"] = a_side.loc[idx, c]
+                disp[f"{c} (V2)"] = b_side.loc[idx, c]
+                msk = mask_side.loc[idx, c] if c in aktif else pd.Series(False, index=idx)
+                msel[f"{c} (V1)"] = msk
+                msel[f"{c} (V2)"] = msk
             st.dataframe(side_styler(disp, msel), use_container_width=True, height=650)
             if total_terfilter > nmax:
                 st.caption(f"Menampilkan {nmax:,} dari {total_terfilter:,} baris terfilter — "
