@@ -351,10 +351,13 @@ def main():
             sel = sel[sel.index.str.lower().str.contains(q, na=False)
                       | sel["Nama"].str.lower().str.contains(q, na=False)]
         total_terfilter = len(sel)
-        nmax = st.slider("Maksimal baris ditampilkan", 50, max(50, total_terfilter),
-                         max(50, total_terfilter), step=50,
-                         help="Default: semua baris yang lolos filter. "
-                              "Semakin banyak baris, semakin lama render tabel.")
+        if total_terfilter <= 50:
+            nmax = total_terfilter
+        else:
+            nmax = st.slider("Maksimal baris ditampilkan", 50, total_terfilter,
+                             total_terfilter, step=50,
+                             help="Default: semua baris yang lolos filter. "
+                                  "Semakin banyak baris, semakin lama render tabel.")
         idx = sel.index[:nmax]
 
         if idx.empty:
